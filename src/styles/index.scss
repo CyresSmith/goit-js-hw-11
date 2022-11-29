@@ -1,7 +1,10 @@
 @font-face {
-  font-family: 'Inter';
-  src: url('../fonts/Inter.ttf');
+  font-family: 'SourceSansPro';
+  src: url('../fonts/SourceSansPro.ttf');
 }
 
+@import './utils/reset-styles';
+@import './utils/visually-hidden';
+@import './utils/mixins';
 @import 'variables';
 @import 'scaffolding';

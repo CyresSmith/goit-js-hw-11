@@ -39,6 +39,7 @@ module.exports = {
 
     new HtmlWebpackPlugin({
       title: 'cyres-webpack-starter',
+      favicon: paths.src + '/images/favicon.png',
       template: paths.src + '/index.html', // template file
       filename: 'index.html', // output file
     }),
