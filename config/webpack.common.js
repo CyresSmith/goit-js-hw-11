@@ -1,6 +1,7 @@
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const webpack = require('webpack');
 const WebpackBar = require('webpackbar');
 
 const paths = require('./paths');
@@ -50,17 +51,20 @@ module.exports = {
     rules: [
       // JavaScript: Use Babel to transpile JavaScript files
       {
-        test: /\.js$/, use: ['babel-loader']
+        test: /\.js$/,
+        use: ['babel-loader'],
       },
 
       // Images: Copy image files to build folder
       {
-        test: /\.(?:ico|gif|png|jpg|jpeg)$/i, type: 'asset/resource'
+        test: /\.(?:ico|gif|png|jpg|jpeg)$/i,
+        type: 'asset/resource',
       },
 
       // Fonts and SVGs: Inline files
       {
-        test: /\.(woff(2)?|eot|ttf|otf|svg|)$/, type: 'asset/inline'
+        test: /\.(woff(2)?|eot|ttf|otf|svg|)$/,
+        type: 'asset/inline',
       },
 
       {
