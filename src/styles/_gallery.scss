@@ -1,0 +1,23 @@
+.gallery {
+  margin-top: calc(-1 * $card-set-gap);
+  margin-left: calc(-1 * $card-set-gap);
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.photo-card {
+  display: block;
+  width: 275px;
+  margin-top: $card-set-gap;
+  margin-left: $card-set-gap;
+  text-align: left;
+}
+
+.photo-card img {
+  display: block;
+  width: 275px;
+  height: 175px;
+  border-radius: 20px;
+  object-fit: cover;
+  margin-bottom: 10px;
+}

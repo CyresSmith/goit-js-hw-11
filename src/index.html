@@ -7,24 +7,29 @@
     <title>cyres-webpack-starter</title>
   </head>
   <body>
-    <div class="header">
-      <form class="search-form" id="search-form">
-        <input
-          type="text"
-          name="searchQuery"
-          autocomplete="off"
-          placeholder="Search images..."
-        />
-        <button type="submit">
-          <!-- <svg width="20" height="20">
-            <use href="./images/icons.svg#search"></use>
-          </svg> -->
-          Search
+    <header class="header">
+      <div class="container">
+        <form class="search-form" id="search-form">
+          <input
+            type="text"
+            name="searchQuery"
+            autocomplete="off"
+            placeholder="Search images..."
+          />
+          <button type="submit">Search</button>
+        </form>
+      </div>
+    </header>
+
+    <section class="section">
+      <div class="container">
+        <div class="gallery">
+          <!-- Карточки изображений -->
+        </div>
+        <button type="button" class="load-more visually-hidden">
+          Load more
         </button>
-      </form>
-    </div>
-    <div class="gallery">
-      <!-- Карточки изображений -->
-    </div>
+      </div>
+    </section>
   </body>
 </html>

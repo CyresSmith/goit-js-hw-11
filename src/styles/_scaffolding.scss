@@ -17,3 +17,16 @@ body {
   text-align: center;
   max-width: $page-width;
 }
+
+.container {
+  width: $container-width;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 20px;
+  padding-right: 20px;
+}
+
+.section {
+  padding-top: 60px;
+  padding-bottom: 60px;
+}
