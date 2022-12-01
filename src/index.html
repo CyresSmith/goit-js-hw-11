@@ -7,7 +7,7 @@
     <title>cyres-webpack-starter</title>
   </head>
   <body>
-    <header class="header">
+    <header id="top" class="header">
       <div class="container">
         <form class="search-form" id="search-form">
           <input
@@ -16,7 +16,12 @@
             autocomplete="off"
             placeholder="Search images..."
           />
-          <button type="submit">Search</button>
+          <button type="submit" disabled="true">
+            <svg width="20" height="20">
+              <use href="../src/images/search.svg"></use>
+            </svg>
+            Search
+          </button>
         </form>
       </div>
     </header>
@@ -31,5 +36,10 @@
         </button>
       </div>
     </section>
+    <a href="#top" class="scroll-up-btn scroll-up-btn--remove">
+      <svg class="scroll-up-btn__icon" width="30" height="30">
+        <use href="./images/symbol-defs.svgVector"></use>
+      </svg>
+    </a>
   </body>
 </html>

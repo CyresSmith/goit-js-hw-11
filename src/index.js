@@ -1,4 +1,6 @@
 import '@/styles/index.scss';
+import { smoothscroll } from './js/smoothscroll';
+import { hideScrollUpBtn } from './js/hide-scroll-up-button';
 import { Notify } from 'notiflix/build/notiflix-notify-aio';
 import { Loading } from 'notiflix/build/notiflix-loading-aio';
 import { Report } from 'notiflix/build/notiflix-report-aio';
@@ -12,65 +14,61 @@ const refs = {
   gallery: document.querySelector('.gallery'),
 };
 
+smoothscroll();
+
+window.addEventListener('scroll', hideScrollUpBtn);
+
 let page = 1;
 
 let searchQuery = '';
 
 const setSearchQuery = e => {
   searchQuery = e.target.value.trim();
+  if (searchQuery.length > 0) {
+    refs.searchBtn.removeAttribute('disabled');
+  }
 };
 
 refs.searchQueryInput.addEventListener('input', setSearchQuery);
 
 const onSearchBtn = async () => {
   event.preventDefault();
-
+  refs.searchBtn.setAttribute('disabled', true);
   page = 1;
 
-  fetchImages(`${searchQuery}`, page)
+  await fetchImages(`${searchQuery}`, page)
     .then(({ totalHits, hits }) => {
-      if (totalHits) {
+      if (hits.length === 0) {
+        Report.failure(
+          'Sorry, there are no images matching your search query. Please try again.'
+        );
+        refs.gallery.innerHTML = '';
+        refs.loadMoreBtn.removeEventListener('click', onLoadMore);
+        refs.loadMoreBtn.classList.add('visually-hidden');
+        refs.searchForm.reset();
+      } else {
+        Loading.hourglass();
         Notify.info(`Hooray! We found ${totalHits} images.`);
-      }
+        renderMarkup(hits)
+          .then(markup => (refs.gallery.innerHTML = markup))
+          .finally(Loading.remove());
 
-      switch (true) {
-        case hits.length === 0:
-          Report.failure(
-            'Sorry, there are no images matching your search query. Please try again.'
-          );
-          refs.searchForm.reset();
-          break;
-
-        case hits.length > 0 && hits.length < 40:
-          Loading.hourglass();
-          renderMarkup(hits).finally(Loading.remove());
-          refs.loadMoreBtn.classList.add('visually-hidden');
-          refs.searchForm.reset();
-          break;
-
-        case hits.length === 40:
-          Loading.hourglass();
-          renderMarkup(hits)
-            .then(() => {
-              setTimeout(() => {
-                refs.loadMoreBtn.classList.remove('visually-hidden');
-              }, 1000);
-            })
-            .finally(Loading.remove());
-          refs.searchForm.reset();
-          break;
-
-        default:
-          break;
+        if (hits.length === 40) {
+          setTimeout(() => {
+            refs.loadMoreBtn.addEventListener('click', onLoadMore);
+            refs.loadMoreBtn.classList.remove('visually-hidden');
+          }, 1000);
+        }
       }
     })
-    .catch(e => e);
+    .catch(e => e)
+    .finally(refs.searchForm.reset());
 };
 
 refs.searchBtn.addEventListener('click', onSearchBtn);
 
 const renderMarkup = async hits => {
-  const markup = hits
+  const markup = await hits
     .map(
       ({
         webformatURL,
@@ -102,7 +100,7 @@ const renderMarkup = async hits => {
     )
     .join('');
 
-  refs.gallery.innerHTML = markup;
+  return markup;
 };
 
 const onLoadMore = async () => {
@@ -110,26 +108,18 @@ const onLoadMore = async () => {
 
   fetchImages(`${searchQuery}`, page)
     .then(({ totalHits, hits }) => {
-      switch (true) {
-        case hits.length === 40:
-          Loading.hourglass();
-          renderMarkup(hits).finally(Loading.remove());
-          break;
+      Loading.hourglass();
+      renderMarkup(hits)
+        .then(markup => refs.gallery.insertAdjacentHTML('beforeend', markup))
+        .finally(Loading.remove());
 
-        case hits.length < 40:
-          Loading.hourglass();
-          renderMarkup(hits).finally(Loading.remove());
-          refs.loadMoreBtn.classList.add('visually-hidden');
-          Notify.info(
-            "We're sorry, but you've reached the end of search results."
-          );
-          break;
-
-        default:
-          break;
+      if (page * 40 >= totalHits) {
+        refs.loadMoreBtn.removeEventListener('click', onLoadMore);
+        refs.loadMoreBtn.classList.add('visually-hidden');
+        Notify.info(
+          "We're sorry, but you've reached the end of search results."
+        );
       }
     })
     .catch(e => e);
 };
-
-refs.loadMoreBtn.addEventListener('click', onLoadMore);

@@ -18,6 +18,10 @@ button {
   &:hover {
     background-color: #bbff00;
   }
+
+  &:disabled {
+    background-color: lightgrey;
+  }
 }
 
 .search-form button {
@@ -28,4 +32,40 @@ button {
   margin-top: 60px;
   margin-left: auto;
   margin-right: auto;
+}
+
+.scroll-up-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: fixed;
+  width: 50px;
+  height: 50px;
+  bottom: 30px;
+  right: 30px;
+  background-color: #8dfc7e;
+  border-radius: 10px;
+  opacity: 0.8;
+  color: black;
+  transition-property: all;
+  transition-duration: 250ms;
+  transition-timing-function: ease-in-out;
+  box-shadow: 1px 49px 41px -25px rgba(0, 0, 0, 0.51);
+  z-index: 9;
+
+  &--remove {
+    transform: translateX(+200%);
+  }
+
+  &:hover,
+  &:focus {
+    opacity: 1;
+    background-color: #bbff00;
+    scale: 1.1;
+  }
+
+  &__icon {
+    fill: #575f6b;
+    rotate: 270deg;
+  }
 }
