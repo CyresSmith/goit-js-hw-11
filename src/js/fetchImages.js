@@ -1,3 +1,4 @@
+import axios from 'axios';
 export { fetchImages };
 
 const URL = 'https://pixabay.com/api/';
@@ -13,13 +14,7 @@ const fetchImages = async (searchQuery, page) => {
     per_page: 40,
   });
 
-  const response = await fetch(`${URL}?${searchParams}`);
-
-  if (!response.ok) {
-    throw new Error(response.status);
-  }
-
-  const responseObject = await response.json();
-
-  return responseObject;
+  return await axios
+    .get(`${URL}/?${searchParams}`)
+    .then(response => response.data);
 };

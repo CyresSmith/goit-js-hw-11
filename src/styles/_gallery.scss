@@ -1,23 +1,68 @@
 .gallery {
-  margin-top: calc(-1 * $card-set-gap);
   margin-left: calc(-1 * $card-set-gap);
   display: flex;
   flex-wrap: wrap;
 }
 
+.gallery a:not(:nth-last-child(-n + 4)) {
+  margin-bottom: 40px;
+}
+
 .photo-card {
   display: block;
-  width: 275px;
-  margin-top: $card-set-gap;
+  width: $card-width;
   margin-left: $card-set-gap;
-  text-align: left;
+  padding-bottom: 5px;
+  border-radius: 20px;
+  background-color: whitesmoke;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  transition-duration: 250ms;
+  transition-property: all;
+  transition-timing-function: ease-in-out;
+  &:hover {
+    scale: 1.1;
+    box-shadow: 0 2.8px 2.2px rgba(0, 0, 0, 0.034),
+      0 6.7px 5.3px rgba(0, 0, 0, 0.048), 0 12.5px 10px rgba(0, 0, 0, 0.06),
+      0 22.3px 17.9px rgba(0, 0, 0, 0.072), 0 41.8px 33.4px rgba(0, 0, 0, 0.086),
+      0 100px 80px rgba(0, 0, 0, 0.12);
+  }
 }
 
 .photo-card img {
   display: block;
   width: 275px;
   height: 175px;
-  border-radius: 20px;
   object-fit: cover;
-  margin-bottom: 10px;
+  margin-bottom: 5px;
+}
+
+.page-title,
+.page-sub-title {
+  display: block;
+  width: 100%;
+}
+
+.page-title {
+  font-size: 20px;
+}
+
+.page-sub-title {
+  font-size: 15px;
+  font-weight: 300;
+  margin-bottom: 20px;
+}
+
+.info {
+  display: flex;
+  flex-wrap: wrap;
+  font-size: 12px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+.info-item {
+  display: block;
+  width: calc($card-width / 2) - 10;
+  text-align: center;
 }

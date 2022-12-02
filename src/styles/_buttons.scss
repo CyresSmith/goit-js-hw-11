@@ -14,6 +14,7 @@ button {
   transition-duration: 250ms;
   transition-property: all;
   transition-timing-function: ease-in-out;
+  fill: black;
 
   &:hover {
     background-color: #bbff00;
@@ -21,6 +22,10 @@ button {
 
   &:disabled {
     background-color: lightgrey;
+  }
+
+  & svg {
+    fill: inherit;
   }
 }
 
@@ -54,7 +59,7 @@ button {
   z-index: 9;
 
   &--remove {
-    transform: translateX(+200%);
+    transform: translateY(+200%);
   }
 
   &:hover,

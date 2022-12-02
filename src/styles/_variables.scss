@@ -4,4 +4,5 @@ $background-color: lightgray;
 $font-color: black;
 $page-width: 100%;
 $container-width: 1200px;
-$card-set-gap: 20px;
+$card-set-gap: 40px;
+$card-width: calc(($container-width - ($card-set-gap * 5)) / 4);

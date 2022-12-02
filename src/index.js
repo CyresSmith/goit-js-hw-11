@@ -1,10 +1,16 @@
-import '@/styles/index.scss';
+const _ = require('lodash');
 import { smoothscroll } from './js/smoothscroll';
 import { hideScrollUpBtn } from './js/hide-scroll-up-button';
 import { Notify } from 'notiflix/build/notiflix-notify-aio';
 import { Loading } from 'notiflix/build/notiflix-loading-aio';
 import { Report } from 'notiflix/build/notiflix-report-aio';
 import { fetchImages } from './js/fetchImages';
+import SimpleLightbox from 'simplelightbox';
+
+import '@/styles/index.scss';
+import 'simplelightbox/dist/simple-lightbox.min.css';
+
+smoothscroll();
 
 const refs = {
   searchForm: document.querySelector('.search-form'),
@@ -14,22 +20,22 @@ const refs = {
   gallery: document.querySelector('.gallery'),
 };
 
-smoothscroll();
-
-window.addEventListener('scroll', hideScrollUpBtn);
-
 let page = 1;
-
+let pageLimit = 40;
+const DEBOUNCE_DELAY = 300;
 let searchQuery = '';
+let gallery;
 
 const setSearchQuery = e => {
   searchQuery = e.target.value.trim();
+  refs.searchQueryInput.value = searchQuery;
+
   if (searchQuery.length > 0) {
     refs.searchBtn.removeAttribute('disabled');
+    refs.loadMoreBtn.classList.add('visually-hidden');
+    refs.searchBtn.addEventListener('click', onSearchBtn);
   }
 };
-
-refs.searchQueryInput.addEventListener('input', setSearchQuery);
 
 const onSearchBtn = async () => {
   event.preventDefault();
@@ -38,6 +44,7 @@ const onSearchBtn = async () => {
 
   await fetchImages(`${searchQuery}`, page)
     .then(({ totalHits, hits }) => {
+      refs.searchForm.reset();
       if (hits.length === 0) {
         Report.failure(
           'Sorry, there are no images matching your search query. Please try again.'
@@ -45,15 +52,15 @@ const onSearchBtn = async () => {
         refs.gallery.innerHTML = '';
         refs.loadMoreBtn.removeEventListener('click', onLoadMore);
         refs.loadMoreBtn.classList.add('visually-hidden');
-        refs.searchForm.reset();
       } else {
         Loading.hourglass();
         Notify.info(`Hooray! We found ${totalHits} images.`);
-        renderMarkup(hits)
-          .then(markup => (refs.gallery.innerHTML = markup))
+        markupСreation(hits)
+          .then(markup => renderMarkup(totalHits, searchQuery, markup))
+          .then(simpleLightboxInit)
           .finally(Loading.remove());
 
-        if (hits.length === 40) {
+        if (hits.length === pageLimit) {
           setTimeout(() => {
             refs.loadMoreBtn.addEventListener('click', onLoadMore);
             refs.loadMoreBtn.classList.remove('visually-hidden');
@@ -61,13 +68,10 @@ const onSearchBtn = async () => {
         }
       }
     })
-    .catch(e => e)
-    .finally(refs.searchForm.reset());
+    .catch(e => e);
 };
 
-refs.searchBtn.addEventListener('click', onSearchBtn);
-
-const renderMarkup = async hits => {
+const markupСreation = async hits => {
   const markup = await hits
     .map(
       ({
@@ -79,7 +83,7 @@ const renderMarkup = async hits => {
         comments,
         downloads,
       }) => `
-          <div class="photo-card">
+          <a class="photo-card" href="${largeImageURL}">
             <img src="${webformatURL}" alt="${tags}" loading="lazy" />
             <div class="info">
               <p class="info-item">
@@ -95,12 +99,19 @@ const renderMarkup = async hits => {
                 <b>Downloads:</b> ${downloads}.
               </p>
             </div>
-          </div>
+          </a>
       `
     )
     .join('');
 
   return markup;
+};
+
+const renderMarkup = async (totalHits, searchQuery, markup) => {
+  const gallaryMarkup =
+    await `<h1 class="page-title">Pictures for the search query "${searchQuery}"</h1>
+           <h2 class="page-sub-title">Total found ${totalHits} pcs</h2>${markup}`;
+  refs.gallery.innerHTML = await gallaryMarkup;
 };
 
 const onLoadMore = async () => {
@@ -109,11 +120,12 @@ const onLoadMore = async () => {
   fetchImages(`${searchQuery}`, page)
     .then(({ totalHits, hits }) => {
       Loading.hourglass();
-      renderMarkup(hits)
+      markupСreation(hits)
         .then(markup => refs.gallery.insertAdjacentHTML('beforeend', markup))
+        .then(simpleLightboxRefresh)
         .finally(Loading.remove());
 
-      if (page * 40 >= totalHits) {
+      if (page * pageLimit >= totalHits) {
         refs.loadMoreBtn.removeEventListener('click', onLoadMore);
         refs.loadMoreBtn.classList.add('visually-hidden');
         Notify.info(
@@ -123,3 +135,18 @@ const onLoadMore = async () => {
     })
     .catch(e => e);
 };
+
+const simpleLightboxInit = async () => {
+  gallery = await new SimpleLightbox('.gallery a');
+};
+
+const simpleLightboxRefresh = async () => {
+  await gallery.refresh();
+};
+
+window.addEventListener('scroll', hideScrollUpBtn);
+
+refs.searchQueryInput.addEventListener(
+  'input',
+  _.debounce(setSearchQuery, DEBOUNCE_DELAY)
+);
