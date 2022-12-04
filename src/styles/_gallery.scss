@@ -4,8 +4,8 @@
   flex-wrap: wrap;
 }
 
-.gallery a:not(:nth-last-child(-n + 4)) {
-  margin-bottom: 40px;
+.gallery a:nth-child(n + 3) {
+  margin-top: 40px;
 }
 
 .photo-card {

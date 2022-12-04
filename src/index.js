@@ -16,7 +16,6 @@ const refs = {
   searchForm: document.querySelector('.search-form'),
   searchQueryInput: document.querySelector('input[name=searchQuery]'),
   searchBtn: document.querySelector('.search-form button'),
-  loadMoreBtn: document.querySelector('.load-more'),
   gallery: document.querySelector('.gallery'),
 };
 
@@ -25,6 +24,7 @@ let pageLimit = 40;
 const DEBOUNCE_DELAY = 300;
 let searchQuery = '';
 let gallery;
+let lastCard;
 
 const setSearchQuery = e => {
   searchQuery = e.target.value.trim();
@@ -32,7 +32,6 @@ const setSearchQuery = e => {
 
   if (searchQuery.length > 0) {
     refs.searchBtn.removeAttribute('disabled');
-    refs.loadMoreBtn.classList.add('visually-hidden');
     refs.searchBtn.addEventListener('click', onSearchBtn);
   }
 };
@@ -50,22 +49,14 @@ const onSearchBtn = async () => {
           'Sorry, there are no images matching your search query. Please try again.'
         );
         refs.gallery.innerHTML = '';
-        refs.loadMoreBtn.removeEventListener('click', onLoadMore);
-        refs.loadMoreBtn.classList.add('visually-hidden');
       } else {
         Loading.hourglass();
         Notify.info(`Hooray! We found ${totalHits} images.`);
         markupСreation(hits)
           .then(markup => renderMarkup(totalHits, searchQuery, markup))
           .then(simpleLightboxInit)
+          .then(observeLastCard)
           .finally(Loading.remove());
-
-        if (hits.length === pageLimit) {
-          setTimeout(() => {
-            refs.loadMoreBtn.addEventListener('click', onLoadMore);
-            refs.loadMoreBtn.classList.remove('visually-hidden');
-          }, 1000);
-        }
       }
     })
     .catch(e => e);
@@ -114,7 +105,7 @@ const renderMarkup = async (totalHits, searchQuery, markup) => {
   refs.gallery.innerHTML = await gallaryMarkup;
 };
 
-const onLoadMore = async () => {
+const loadMorePics = async () => {
   page += 1;
 
   fetchImages(`${searchQuery}`, page)
@@ -126,12 +117,13 @@ const onLoadMore = async () => {
         .finally(Loading.remove());
 
       if (page * pageLimit >= totalHits) {
-        refs.loadMoreBtn.removeEventListener('click', onLoadMore);
-        refs.loadMoreBtn.classList.add('visually-hidden');
         Notify.info(
           "We're sorry, but you've reached the end of search results."
         );
+        return;
       }
+
+      observeLastCard();
     })
     .catch(e => e);
 };
@@ -150,3 +142,19 @@ refs.searchQueryInput.addEventListener(
   'input',
   _.debounce(setSearchQuery, DEBOUNCE_DELAY)
 );
+
+const options = {
+  threshold: 0.5,
+};
+
+const observer = new IntersectionObserver(([entry], observer) => {
+  if (entry.isIntersecting) {
+    observer.unobserve(entry.target);
+    loadMorePics();
+  }
+}, options);
+
+const observeLastCard = async () => {
+  lastCard = await document.querySelector('.photo-card:last-child');
+  observer.observe(lastCard);
+};
