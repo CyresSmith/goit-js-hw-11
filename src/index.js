@@ -33,7 +33,11 @@ const setSearchQuery = e => {
   if (searchQuery.length > 0) {
     refs.searchBtn.removeAttribute('disabled');
     refs.searchBtn.addEventListener('click', onSearchBtn);
+    return;
   }
+
+  refs.searchBtn.setAttribute('disabled', true);
+  refs.searchBtn.removeEventListener('click', onSearchBtn);
 };
 
 const onSearchBtn = async () => {
