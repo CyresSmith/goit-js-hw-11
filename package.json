@@ -10,7 +10,8 @@
     "build": "cross-env NODE_ENV=production webpack --config config/webpack.prod.js",
     "lint": "eslint 'src/**/*.js' || true",
     "prettify": "prettier --write 'src/**/*.js'",
-    "server": "cd dist && http-server"
+    "server": "cd dist && http-server",
+    "deploy": "gh-pages -d dist"
   },
   "keywords": [
     "webpack",
