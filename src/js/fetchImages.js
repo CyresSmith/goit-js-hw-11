@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 import axios from 'axios';
 export { fetchImages };
 
@@ -14,7 +15,11 @@ const fetchImages = async (searchQuery, page) => {
     per_page: 40,
   });
 
-  return await axios
-    .get(`${URL}/?${searchParams}`)
-    .then(response => response.data);
+  try {
+    const { data } = await axios.get(`${URL}/?${searchParams}`);
+    return data;
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error(error.message);
+  }
 };

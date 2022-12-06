@@ -1,4 +1,3 @@
-const _ = require('lodash');
 import { smoothscroll } from './js/smoothscroll';
 import { hideScrollUpBtn } from './js/hide-scroll-up-button';
 import { Notify } from 'notiflix/build/notiflix-notify-aio';
@@ -21,13 +20,12 @@ const refs = {
 
 let page = 1;
 let pageLimit = 40;
-const DEBOUNCE_DELAY = 300;
 let searchQuery = '';
 let gallery;
 let lastCard;
 
 const setSearchQuery = e => {
-  searchQuery = e.target.value.trim();
+  searchQuery = e.target.value.toLowerCase().trim();
   refs.searchQueryInput.value = searchQuery;
 
   if (searchQuery.length > 0) {
@@ -42,32 +40,37 @@ const setSearchQuery = e => {
 
 const onSearchBtn = async () => {
   event.preventDefault();
+  refs.searchForm.reset();
   refs.searchBtn.setAttribute('disabled', true);
+  refs.searchBtn.removeEventListener('click', onSearchBtn);
   page = 1;
 
-  await fetchImages(`${searchQuery}`, page)
-    .then(({ totalHits, hits }) => {
-      refs.searchForm.reset();
-      if (hits.length === 0) {
-        Report.failure(
-          'Sorry, there are no images matching your search query. Please try again.'
-        );
-        refs.gallery.innerHTML = '';
-      } else {
-        Loading.hourglass();
-        Notify.info(`Hooray! We found ${totalHits} images.`);
-        markupСreation(hits)
-          .then(markup => renderMarkup(totalHits, searchQuery, markup))
-          .then(simpleLightboxInit)
-          .then(observeLastCard)
-          .finally(Loading.remove());
+  try {
+    const { totalHits, hits } = await fetchImages(`${searchQuery}`, page);
+
+    if (hits.length > 0) {
+      Notify.info(`Hooray! We found ${totalHits} images.`);
+      Loading.hourglass();
+      renderGalleryMarkup(totalHits, searchQuery, galleryMarkupСreation(hits));
+      simpleLightboxInit();
+      if (totalHits > pageLimit) {
+        observeLastCard();
       }
-    })
-    .catch(e => e);
+      Loading.remove();
+      return;
+    }
+    Report.failure(
+      'Sorry, there are no images matching your search query. Please try again.'
+    );
+    refs.gallery.innerHTML = '';
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error(error.message);
+  }
 };
 
-const markupСreation = async hits => {
-  const markup = await hits
+const galleryMarkupСreation = hits => {
+  const markup = hits
     .map(
       ({
         webformatURL,
@@ -102,63 +105,53 @@ const markupСreation = async hits => {
   return markup;
 };
 
-const renderMarkup = async (totalHits, searchQuery, markup) => {
-  const gallaryMarkup =
-    await `<h1 class="page-title">Pictures for the search query "${searchQuery}"</h1>
+const renderGalleryMarkup = (totalHits, searchQuery, markup) => {
+  const gallaryMarkup = `<h1 class="page-title">Pictures for the search query "${searchQuery}"</h1>
            <h2 class="page-sub-title">Total found ${totalHits} pcs</h2>${markup}`;
-  refs.gallery.innerHTML = await gallaryMarkup;
+  refs.gallery.innerHTML = gallaryMarkup;
 };
 
 const loadMorePics = async () => {
   page += 1;
+  Loading.hourglass();
 
-  fetchImages(`${searchQuery}`, page)
-    .then(({ totalHits, hits }) => {
-      Loading.hourglass();
-      markupСreation(hits)
-        .then(markup => refs.gallery.insertAdjacentHTML('beforeend', markup))
-        .then(simpleLightboxRefresh)
-        .finally(Loading.remove());
+  try {
+    const { totalHits, hits } = await fetchImages(`${searchQuery}`, page);
+    refs.gallery.insertAdjacentHTML('beforeend', galleryMarkupСreation(hits));
+    gallery.refresh();
+    Loading.remove();
 
-      if (page * pageLimit >= totalHits) {
-        Notify.info(
-          "We're sorry, but you've reached the end of search results."
-        );
-        return;
-      }
+    if (page * pageLimit >= totalHits) {
+      Notify.info("We're sorry, but you've reached the end of search results.");
+      return;
+    }
 
-      observeLastCard();
-    })
-    .catch(e => e);
+    observeLastCard();
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error(error.message);
+  }
 };
 
-const simpleLightboxInit = async () => {
-  gallery = await new SimpleLightbox('.gallery a');
+const simpleLightboxInit = () => {
+  gallery = new SimpleLightbox('.gallery a');
 };
 
-const simpleLightboxRefresh = async () => {
-  await gallery.refresh();
-};
-
-window.addEventListener('scroll', hideScrollUpBtn);
-
-refs.searchQueryInput.addEventListener(
-  'input',
-  _.debounce(setSearchQuery, DEBOUNCE_DELAY)
+const observer = new IntersectionObserver(
+  ([entry], observer) => {
+    if (entry.isIntersecting) {
+      observer.unobserve(entry.target);
+      loadMorePics();
+    }
+  },
+  { threshold: 0.5 }
 );
 
-const options = {
-  threshold: 0.5,
-};
-
-const observer = new IntersectionObserver(([entry], observer) => {
-  if (entry.isIntersecting) {
-    observer.unobserve(entry.target);
-    loadMorePics();
-  }
-}, options);
-
-const observeLastCard = async () => {
-  lastCard = await document.querySelector('.photo-card:last-child');
+const observeLastCard = () => {
+  lastCard = document.querySelector('.photo-card:last-child');
   observer.observe(lastCard);
 };
+
+refs.searchQueryInput.addEventListener('input', setSearchQuery);
+
+window.addEventListener('scroll', hideScrollUpBtn);
